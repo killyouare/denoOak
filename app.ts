@@ -1,12 +1,10 @@
 import { Application } from "./deps.ts";
-import { router } from "./router/dogRouter.ts";
-const env = Deno.env.toObject();
-const PORT = env.PORT || 4000;
-const HOST = env.HOST || "127.0.0.1";
+import { router } from "./router/userRouter.ts";
+import { HOST, PORT } from "./config.ts";
 
 const app = new Application();
 
-app.use(router.prefix("/dogs/").routes());
+app.use(router.prefix("/users/").routes());
 app.use(router.allowedMethods());
 
 console.log(`Listening on port ${PORT}...`);
