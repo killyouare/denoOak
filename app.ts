@@ -4,9 +4,9 @@ import { HOST, PORT } from "./config.ts";
 
 const app = new Application();
 
-app.use(router.prefix("/users/").routes());
+app.use(router.prefix("/users").routes());
 app.use(router.allowedMethods());
 
-console.log(`Listening on port ${PORT}...`);
+console.log(`${HOST}:${PORT}`);
 
 await app.listen(`${HOST}:${PORT}`);
