@@ -1,11 +1,10 @@
 import { Router } from "../deps.ts";
 import controller from "../controller/UserController.ts";
-import test from "../controller/test.ts";
-import { authCheck } from "../middlewares/authMiddleware.ts";
+import { roleCheck } from "../middlewares/roleMiddleware.ts";
 const router = new Router();
 
 router
   .post("/register", controller.register)
-  .get("/", authCheck, controller.index)
+  .get("/", roleCheck(true), controller.index)
   .post("/login", controller.login);
 export { router };

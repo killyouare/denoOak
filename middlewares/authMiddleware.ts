@@ -7,7 +7,7 @@ const authCheck = async (ctx: Context, next: Function) => {
     )?.replace(`Bearer `, "");
     await verify(token ? token : "", KEY);
     await next();
-  } catch (e) {
+  } catch {
     ctx.response.status = Status.Unauthorized;
     ctx.response.body = { error: { msg: "Unauthorized" } };
   }

@@ -9,6 +9,5 @@ interface UserSchema {
   is_admin: boolean;
 }
 const users = db.collection<UserSchema>("users");
-
 export { users };
 export type { UserSchema };

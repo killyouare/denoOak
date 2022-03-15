@@ -36,14 +36,17 @@ export default {
   login: async ({ request, response }: rr) => {
     const body = request.body();
     const { username, password }: UserSchema = await body.value;
-    const user = await users.findOne({ username });
+    const user: UserSchema | undefined = await users.findOne({ username });
     if (!await bycript.compare(password, user ? user.password : "")) {
       response.body = {
         error: { msg: "Unauthorizesd" },
       };
       return;
     }
-    const payload: Payload = { user, exp: getNumericDate(60 * 60) };
+    const payload: Payload = {
+      iss: username,
+      exp: getNumericDate(60 * 60),
+    };
     const jwt = await create(HEADER, payload, KEY);
     response.body = {
       data: {
