@@ -1,7 +1,7 @@
 import { Context, Payload, Status, verify } from "../deps.ts";
 import { KEY } from "../config.ts";
-import { users } from "../models/User.ts";
-import type { UserSchema } from "../models/User.ts";
+import { users } from "../models/Users.ts";
+import type { UserSchema } from "../models/Users.ts";
 
 const roleCheck = (isAdmin: boolean) => {
   return async (ctx: Context, next: Function) => {

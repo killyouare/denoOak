@@ -1,6 +1,9 @@
-import { Context, Status, verify } from "../deps.ts";
-import { KEY } from "../config.ts";
-const authCheck = async (ctx: Context, next: Function) => {
+import { Context, Status, verify } from "../deps";
+import { KEY } from "../config";
+const authCheck = async (
+  ctx: Context<Record<string, unknown>>,
+  next: Function,
+) => {
   try {
     const token: string | undefined = ctx.request.headers.get(
       "Authorization",

@@ -1,9 +1,9 @@
-import { users } from "../models/User.ts";
+import { users } from "../models/Users.ts";
 import { bycript, create, getNumericDate, Payload } from "../deps.ts";
 import { rr, rs } from "../interfaces.ts";
 import { HEADER, KEY } from "../config.ts";
 
-import type { UserSchema } from "../models/User.ts";
+import type { UserSchema } from "../models/Users.ts";
 
 export default {
   register: async ({
@@ -28,6 +28,7 @@ export default {
         password: hash,
         is_admin: false,
       });
+      response.status = 201;
       response.body = { data: { msg: "OK" } };
     } catch (e) {
       response.body = { error: { msg: e.toString() } };

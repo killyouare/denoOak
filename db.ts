@@ -1,4 +1,4 @@
-import { MongoClient } from "./deps.ts";
+import { DBRef, MongoClient } from "./deps.ts";
 import { URI } from "./config.ts";
 const client = new MongoClient();
 try {
