@@ -27,6 +27,7 @@ export default {
         lastname,
         password: hash,
         is_admin: false,
+        cart: []
       });
       response.status = 201;
       response.body = { data: { msg: "OK" } };

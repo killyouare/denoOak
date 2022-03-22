@@ -4,7 +4,5 @@ import { roleCheck } from "../middlewares/roleMiddleware.ts";
 const cartRouter = new Router();
 
 cartRouter
-  .get("/:productId", roleCheck(false), controller.add)
-  .get("/cart", roleCheck(true), controller.index)
-  .delete("/cart", roleCheck(true), controller.index);
+  .get("/:productId", roleCheck(false), controller.index)
 export { cartRouter };

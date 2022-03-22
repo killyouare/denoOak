@@ -1,13 +1,13 @@
 import { db } from "../db.ts";
 import { Bson } from "../deps.ts";
 interface UserSchema {
-  _id?: ObjectId;
+  _id?: Bson.ObjectId;
   username: string;
   name: string;
   lastname: string;
   password: string;
   is_admin: boolean;
-  cart: ObjectId[];
+  cart: Bson.ObjectId[];
 }
 
 const users = db.collection<UserSchema>("users");

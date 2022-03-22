@@ -1,10 +1,10 @@
 import { db } from "../db.ts";
 import { Bson } from "../deps.ts";
 interface ProductSchema {
-  _id?: ObjectId;
+  _id?: Bson.ObjectId;
   name: string;
   description: string;
-  price: Decimal128;
+  price: Bson.Decimal128;
 }
 
 const products = db.collection<ProductSchema>("products");
