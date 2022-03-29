@@ -39,6 +39,7 @@ export default {
     const body = request.body();
     const { username, password }: UserSchema = await body.value;
     const user: UserSchema | undefined = await users.findOne({ username });
+    console.log(user);
     if (!await bycript.compare(password, user ? user.password : "")) {
       response.body = {
         error: { msg: "Unauthorizesd" },
