@@ -1,18 +1,12 @@
-import { Context, Payload, Status, verify } from "../deps.ts";
-import { KEY } from "../config.ts";
+import { Context, Payload, Status } from "../deps.ts";
 import { users } from "../models/Users.ts";
+import { getUsername } from "../Helpers/getUser.ts"
 import type { UserSchema } from "../models/Users.ts";
 
 const roleCheck = (isAdmin: boolean) => {
   return async (ctx: Context, next: Function) => {
     try {
-      const token: string | undefined = ctx.request.headers.get(
-        "Authorization",
-      )?.replace(`Bearer `, "");
-      const { iss }: Payload = await verify(
-        token ? token : "",
-        KEY,
-      );
+      const { iss } = await getUsername(ctx);
       const user: UserSchema | undefined = await users.findOne({
         username: iss,
       });

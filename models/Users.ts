@@ -1,5 +1,6 @@
 import { db } from "../db.ts";
-import { Bson } from "../deps.ts";
+import { Bson, bycript } from "../deps.ts";
+import { userSeeder } from "../Seeders/UserSeeder.ts";
 interface UserSchema {
   _id?: Bson.ObjectId;
   username: string;
@@ -11,6 +12,8 @@ interface UserSchema {
 }
 
 const users = db.collection<UserSchema>("users");
+
+userSeeder(users);
 
 export { users };
 export type { UserSchema };
