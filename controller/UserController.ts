@@ -1,23 +1,26 @@
 import { users } from "../models/Users.ts";
-import { bycript, create, getNumericDate, Payload } from "../deps.ts";
-import { rr, rs } from "../interfaces.ts";
+import {
+  bycript,
+  Context,
+  create,
+  getNumericDate,
+  Payload,
+  Status,
+} from "../deps.ts";
 import { HEADER, KEY } from "../config.ts";
 
 import type { UserSchema } from "../models/Users.ts";
 
 export default {
-  register: async ({
-    request,
-    response,
-  }: rr) => {
+  register: async (ctx: Context) => {
     try {
-      const body = await request.body();
+      const body = await ctx.request.body();
       const { username, name, lastname, password }: UserSchema = await body
         .value;
       const user = await users.findOne({ username });
       if (user) {
-        response.body = { error: { msg: "User already exists" } };
-        response.status = 422;
+        ctx.response.body = { error: { msg: "User already exists" } };
+        ctx.response.status = 422;
         return;
       }
       await users.insertOne({
@@ -26,40 +29,42 @@ export default {
         lastname,
         password: await bycript.hash(password),
         is_admin: false,
-        cart: []
+        cart: [],
       });
-      response.status = 201;
-      response.body = { data: { msg: "OK" } };
+      ctx.response.status = 201;
+      ctx.response.body = { data: { msg: "OK" } };
     } catch (e) {
-      response.body = { error: { msg: e.toString() } };
+      ctx.response.body = { error: { msg: e.toString() } };
     }
   },
-  login: async ({ request, response }: rr) => {
-    const body = request.body();
-    const { username, password }: UserSchema = await body.value;
-    const user: UserSchema | undefined = await users.findOne({ username });
-    if (!await bycript.compare(password, user ? user.password : "")) {
-      response.body = {
-        error: { msg: "Unauthorizesd" },
-      };
-      return;
-    }
-    const payload: Payload = {
-      iss: username,
-      exp: getNumericDate(60 * 60),
-    };
-    const jwt = await create(HEADER, payload, KEY);
-    response.body = {
-      data: {
-        token: jwt,
-      },
-    };
-  },
-  index: async ({
-    response,
-  }: rs) => {
+  login: async (ctx: Context) => {
     try {
-      response.body = {
+      const body = ctx.request.body();
+      const { username, password }: UserSchema = await body.value;
+      const user: UserSchema | undefined = await users.findOne({ username });
+      if (!await bycript.compare(password, user ? user.password : "")) {
+        ctx.response.body = {
+          error: { msg: "Unauthorizesd" },
+        };
+        return;
+      }
+      const payload: Payload = {
+        iss: username,
+        exp: getNumericDate(60 * 60),
+      };
+      const jwt = await create(HEADER, payload, KEY);
+      ctx.response.body = {
+        data: {
+          token: jwt,
+        },
+      };
+    } catch {
+      ctx.throw(Status.Unauthorized, "UnAuthorized");
+    }
+  },
+  index: async (ctx: Context) => {
+    try {
+      ctx.response.body = {
         data: {
           users: (await users.find().toArray()).map((value) => {
             return {
@@ -71,7 +76,7 @@ export default {
         },
       };
     } catch (e) {
-      response.body = { error: { msg: e.toString() } };
+      ctx.response.body = { error: { msg: e.toString() } };
     }
   },
 };
