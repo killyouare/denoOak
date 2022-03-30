@@ -1,6 +1,6 @@
 import { users } from "../models/Users.ts";
 import { products } from "../models/Products.ts";
-import { Context, Status } from "../deps.ts";
+import { Context, ObjectId, Status } from "../deps.ts";
 import { getUsername } from "../Helpers/getUser.ts";
 
 export default {
@@ -8,12 +8,15 @@ export default {
     try {
       const request = await ctx.request.body();
       const { product } = await request.value;
-      if (!await products.findOne({ _id: { $oid: product } })) {
+      const productId = new ObjectId(product);
+      if (!await products.findOne({ _id: productId })) {
         return ctx.response.body = {
           error: { msg: "Product not found" },
         };
       }
       const { iss } = await getUsername(ctx);
+      console.log(iss);
+
       await users.updateOne({
         username: iss,
       }, {
@@ -54,7 +57,14 @@ export default {
       };
     }
   },
-  del: async (ctx: Context) => {
-    await console.log(ctx);
+  del: async (ctx: any) => {
+    const id = await ctx.params.id;
+    const { iss } = await getUsername(ctx);
+    await users.updateOne({ username: iss }, {
+      $pull: { cart: id },
+    });
+    return ctx.response.body = {
+      data: { msg: "Item removed" },
+    };
   },
 };

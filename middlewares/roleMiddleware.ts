@@ -5,7 +5,7 @@ import type { UserSchema } from "../models/Users.ts";
 
 const roleCheck = (isAdmin: boolean) => {
   return async (
-    ctx: Context<Record<string, unknown>>,
+    ctx: Context,
     next: () => Promise<unknown>,
   ) => {
     try {

@@ -1,7 +1,7 @@
 import { Context, Status, verify } from "../deps.ts";
 import { KEY } from "../config.ts";
 const authCheck = async (
-  ctx: Context<Record<string, unknown>>,
+  ctx: Context,
   next: () => Promise<unknown>,
 ) => {
   try {

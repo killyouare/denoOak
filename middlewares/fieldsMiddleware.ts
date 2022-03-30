@@ -1,7 +1,7 @@
 import { Context, Status } from "../deps.ts";
 const fieldsCheck = (fields: string[]) => {
   return async (
-    ctx: Context<Record<string, unknown>>,
+    ctx: Context,
     next: () => Promise<unknown>,
   ) => {
     try {

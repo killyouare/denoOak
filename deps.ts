@@ -6,6 +6,10 @@ export {
   Router,
   Status,
 } from "https://deno.land/x/oak@v10.4.0/mod.ts";
+export type {
+  Route,
+  RouterContext,
+} from "https://deno.land/x/oak@v10.4.0/mod.ts";
 export { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
 export {
   Bson,
