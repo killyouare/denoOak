@@ -4,7 +4,10 @@ import { getUsername } from "../Helpers/getUser.ts";
 import type { UserSchema } from "../models/Users.ts";
 
 const roleCheck = (isAdmin: boolean) => {
-  return async (ctx: Context, next: () => Promise<unknown>) => {
+  return async (
+    ctx: Context<Record<string, unknown>>,
+    next: () => Promise<unknown>,
+  ) => {
     try {
       const { iss } = await getUsername(ctx);
       const user: UserSchema | undefined = await users.findOne({

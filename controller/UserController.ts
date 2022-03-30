@@ -14,7 +14,7 @@ import type { UserSchema } from "../models/Users.ts";
 export default {
   register: async (ctx: Context) => {
     try {
-      const body = await ctx.request.body();
+      const body = ctx.request.body();
       const { username, name, lastname, password }: UserSchema = await body
         .value;
       const user = await users.findOne({ username });
@@ -58,8 +58,11 @@ export default {
           token: jwt,
         },
       };
-    } catch {
-      ctx.throw(Status.Unauthorized, "UnAuthorized");
+    } catch (e) {
+      ctx.response.status = Status.Unauthorized;
+      return ctx.response.body = {
+        error: { msg: e.toString() },
+      };
     }
   },
   index: async (ctx: Context) => {
@@ -76,6 +79,7 @@ export default {
         },
       };
     } catch (e) {
+      ctx.response.status = Status.BadRequest;
       ctx.response.body = { error: { msg: e.toString() } };
     }
   },

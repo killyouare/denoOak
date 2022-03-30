@@ -1,24 +1,32 @@
 import { Context, Status } from "../deps.ts";
-
 const fieldsCheck = (fields: string[]) => {
-  return async (ctx: Context, next: () => Promise<unknown>) => {
+  return async (
+    ctx: Context<Record<string, unknown>>,
+    next: () => Promise<unknown>,
+  ) => {
     try {
-      if (!ctx.request.hasBody) {
-        ctx.throw(Status.BadRequest, "Bad Request");
-      }
-
       const request = ctx.request.body();
       const body = await request.value;
 
+      const errors: string[] = [];
       fields.forEach((field) => {
-        if (!field.includes(body)) {
-          return ctx.throw(Status.BadRequest, "Bad Request");
+        if (!Object.prototype.hasOwnProperty.call(body, field)) {
+          errors.push(`Request does not have a ${field} field`);
         }
       });
-
-      next();
-    } catch {
-      return ctx.throw(Status.BadRequest, "Bad Request");
+      if (errors.length) {
+        throw {
+          code: Status.BadRequest,
+          msg: "Validation errors",
+          errors,
+        };
+      }
+      await next();
+    } catch ({ errors, msg, code }) {
+      ctx.response.status = code;
+      return ctx.response.body = {
+        error: { msg, errors },
+      };
     }
   };
 };
