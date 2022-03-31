@@ -15,7 +15,6 @@ export default {
         };
       }
       const { iss } = await getUsername(ctx);
-      console.log(iss);
 
       await users.updateOne({
         username: iss,
@@ -58,13 +57,42 @@ export default {
     }
   },
   del: async (ctx: any) => {
-    const id = await ctx.params.id;
-    const { iss } = await getUsername(ctx);
-    await users.updateOne({ username: iss }, {
-      $pull: { cart: id },
-    });
-    return ctx.response.body = {
-      data: { msg: "Item removed" },
-    };
+    try {
+      const id = await ctx.params.id;
+      const { iss } = await getUsername(ctx);
+      const user = await users.findOne({ username: iss });
+      const cart = user?.cart ?? [];
+
+      if (!cart.length) {
+        throw {
+          code: Status.BadRequest,
+          message: "Cart is empty",
+        };
+      }
+
+      const index = cart.indexOf(id);
+
+      if (index == -1) {
+        throw {
+          code: Status.BadRequest,
+          message: "No specified product",
+        };
+      }
+
+      cart.splice(index, 1);
+
+      await users.updateOne(
+        { username: iss },
+        {
+          $set: { cart },
+        },
+      );
+      return ctx.response.body = {
+        data: { msg: "Item removed" },
+      };
+    } catch (e) {
+      ctx.response.status = e.code;
+      return ctx.response.body = { error: { msg: e.message } };
+    }
   },
 };
