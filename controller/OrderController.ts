@@ -1,15 +1,14 @@
 import { Bson, Context, Status } from "../deps.ts";
-import { users } from "../models/Users.ts";
+import { users, UserSchema } from "../models/Users.ts";
 import { products } from "../models/Products.ts";
 import { orders } from "../models/Order.ts";
-import { getUsername } from "../Helpers/getUser.ts";
 export default {
   create: async (ctx: Context) => {
     try {
-      const { iss } = await getUsername(ctx);
-      const user = await users.findOne({ username: iss });
-      const cart = user?.cart ?? [];
+      const request = ctx.request.body();
+      const { user }: { user: UserSchema } = await request.value;
 
+      const cart = user.cart;
       if (!cart.length) {
         throw {
           code: Status.BadRequest,
@@ -17,16 +16,21 @@ export default {
         };
       }
 
-      const order: Map<Bson.ObjectId, Bson.Decimal128 | number> = new Map();
+      const order: Map<Bson.ObjectId, Bson.Decimal128> = new Map();
 
       cart.forEach(async (el) => {
         const product = await products.findOne({ _id: el });
-        order.set(el, product?.price ?? 15);
+        if (product == undefined) ctx.throw(Status.BadRequest, "Bad cart");
+        order.set(el, product.price);
       });
       await orders.insertOne({
-        user: user?._id,
+        user: user._id,
         products: order,
       });
+      ctx.response.status = Status.OK;
+      return ctx.response.body = {
+        data: { msg: "Created" },
+      };
     } catch (e) {
       ctx.response.status = e.code;
       return ctx.response.body = { error: { msg: e.message } };

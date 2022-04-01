@@ -10,7 +10,6 @@ const router = (app: Application) => {
   app.use(productRouter.allowedMethods());
   app.use(cartRouter.prefix("/cart").routes());
   app.use(cartRouter.allowedMethods());
-
   app.use(function (ctx) {
     return ctx.response.body = {
       error: {

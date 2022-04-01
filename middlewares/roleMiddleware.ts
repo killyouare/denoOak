@@ -1,6 +1,5 @@
 import { Context, Status } from "../deps.ts";
 import { users } from "../models/Users.ts";
-import { getUsername } from "../Helpers/getUser.ts";
 import type { UserSchema } from "../models/Users.ts";
 
 const roleCheck = (isAdmin: boolean) => {
@@ -9,11 +8,9 @@ const roleCheck = (isAdmin: boolean) => {
     next: () => Promise<unknown>,
   ) => {
     try {
-      const { iss } = await getUsername(ctx);
-      const user: UserSchema | undefined = await users.findOne({
-        username: iss,
-      });
-      if (user?.is_admin != isAdmin) {
+      const request = ctx.request.body();
+      const { user } = await request.value;
+      if (user.is_admin != isAdmin) {
         ctx.response.body = { error: { msg: "Forbidden for you." } };
         ctx.response.status = Status.Forbidden;
         return;

@@ -11,12 +11,6 @@ import { HEADER, KEY } from "../config.ts";
 
 import type { UserSchema } from "../models/Users.ts";
 
-interface userPayload extends Payload {
-  user: UserSchema;
-}
-
-export type { userPayload };
-
 export default {
   register: async (ctx: Context) => {
     try {
@@ -48,13 +42,16 @@ export default {
       const body = ctx.request.body();
       const { username, password }: UserSchema = await body.value;
       const user = await users.findOne({ username });
-      if (!await bycript.compare(password, user ? user.password : "")) {
+      if (
+        user == undefined ||
+        !await bycript.compare(password, user ? user.password : "")
+      ) {
         throw {
           msg: "Unauthorized",
         };
       }
-      const payload: userPayload = {
-        user: user,
+      const payload: Payload = {
+        iss: user._id.toString(),
         exp: getNumericDate(60 * 60),
       };
       const jwt = await create(HEADER, payload, KEY);

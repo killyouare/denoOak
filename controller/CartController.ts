@@ -1,24 +1,21 @@
-import { users } from "../models/Users.ts";
+import { users, UserSchema } from "../models/Users.ts";
 import { products } from "../models/Products.ts";
 import { Context, ObjectId, Status } from "../deps.ts";
-import { getUsername } from "../Helpers/getUser.ts";
 
 export default {
   add: async (ctx: Context) => {
     try {
       const request = await ctx.request.body();
-      const { product } = await request.value;
+      const { product, user }: { product: any; user: UserSchema } =
+        await request.value;
       const productId = new ObjectId(product);
       if (!await products.findOne({ _id: productId })) {
         return ctx.response.body = {
           error: { msg: "Product not found" },
         };
       }
-      const { iss } = await getUsername(ctx);
 
-      await users.updateOne({
-        username: iss,
-      }, {
+      await users.updateOne(user, {
         $push: {
           cart: product,
         },
@@ -37,9 +34,9 @@ export default {
   },
   index: async (ctx: Context) => {
     try {
-      const { iss } = await getUsername(ctx);
-      const user = await users.findOne({ username: iss });
-      const cart = user?.cart ?? [];
+      const request = await ctx.request.body();
+      const { user }: { user: UserSchema } = await request.value;
+      const cart = user.cart;
       ctx.response.status = Status.Created;
       return ctx.response.body = {
         data: {
@@ -58,10 +55,11 @@ export default {
   },
   del: async (ctx: any) => {
     try {
-      const id = await ctx.params.id;
-      const { iss } = await getUsername(ctx);
-      const user = await users.findOne({ username: iss });
-      const cart = user?.cart ?? [];
+      const id = ctx.params.id;
+      const request = await ctx.request.body();
+      const { user }: { user: UserSchema } = await request.value;
+
+      const cart = user.cart;
 
       if (!cart.length) {
         throw {
@@ -82,7 +80,7 @@ export default {
       cart.splice(index, 1);
 
       await users.updateOne(
-        { username: iss },
+        user,
         {
           $set: { cart },
         },
