@@ -1,13 +1,13 @@
 import { users, UserSchema } from "../models/Users.ts";
-import { products } from "../models/Products.ts";
+import { products, ProductSchema } from "../models/Products.ts";
 import { Context, ObjectId, Status } from "../deps.ts";
 
 export default {
   add: async (ctx: Context) => {
     try {
       const request = await ctx.request.body();
-      const { product, user }: { product: any; user: UserSchema } =
-        await request.value;
+      const { product } = await request.value;
+      const user = ctx.app.state.user;
       const productId = new ObjectId(product);
       if (!await products.findOne({ _id: productId })) {
         return ctx.response.body = {
@@ -20,7 +20,7 @@ export default {
           cart: product,
         },
       });
-      ctx.response.status = Status.OK;
+      ctx.response.status = Status.Created;
       ctx.response.body = {
         data: { msg: "Added" },
       };
@@ -32,23 +32,45 @@ export default {
       };
     }
   },
-  index: async (ctx: Context) => {
+  index: (ctx: Context) => {
     try {
-      const request = await ctx.request.body();
-      const { user }: { user: UserSchema } = await request.value;
-      const cart = user.cart;
-      ctx.response.status = Status.Created;
+      const user: UserSchema = ctx.app.state.user;
+      const err: string[] = [];
+      const data = {
+        username: user.username,
+        cart: user.cart.map(async (value) => {
+          const product: ProductSchema | undefined = await products.findOne({
+            _id: value,
+          });
+          if (product == undefined) {
+            await users.updateOne(user, {
+              $pull: {
+                cart: value,
+              },
+            });
+            err.push(`Product ${value} not exists`);
+            return;
+          }
+          return {
+            name: product.name,
+            description: product.description,
+            price: product.price,
+          };
+        }),
+      };
+      if (err.length) {
+        throw {
+          msg: err,
+        };
+      }
       return ctx.response.body = {
-        data: {
-          username: user?.username,
-          cart,
-        },
+        data: data,
       };
     } catch (e) {
-      ctx.response.status = Status.FailedDependency;
+      ctx.response.status = Status.UnprocessableEntity;
       return ctx.response.body = {
         error: {
-          msg: e.toString(),
+          msg: e.msg,
         },
       };
     }
@@ -56,8 +78,7 @@ export default {
   del: async (ctx: any) => {
     try {
       const id = ctx.params.id;
-      const request = await ctx.request.body();
-      const { user }: { user: UserSchema } = await request.value;
+      const user = ctx.app.state.user;
 
       const cart = user.cart;
 

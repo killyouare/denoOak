@@ -60,10 +60,10 @@ export default {
           token: jwt,
         },
       };
-    } catch ({ msg }) {
+    } catch (e) {
       ctx.response.status = Status.Unauthorized;
       return ctx.response.body = {
-        error: { msg },
+        error: { msg: e },
       };
     }
   },
@@ -84,5 +84,10 @@ export default {
       ctx.response.status = Status.BadRequest;
       ctx.response.body = { error: { msg: e.toString() } };
     }
+  },
+  logout: (ctx: Context) => {
+    ctx.response.body = {
+      data: { msg: "logout" },
+    };
   },
 };

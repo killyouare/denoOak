@@ -24,6 +24,6 @@ export default {
     const { name, description, price }: ProductSchema = await body.value;
     await products.insertOne({ name, description, price });
     ctx.response.status = 201;
-    ctx.response.body = { data: { msg: "OK" } };
+    ctx.response.body = { data: { msg: "Created" } };
   },
 };

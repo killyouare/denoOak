@@ -5,13 +5,10 @@ import { orders } from "../models/Order.ts";
 export default {
   create: async (ctx: Context) => {
     try {
-      const request = ctx.request.body();
-      const { user }: { user: UserSchema } = await request.value;
-
+      const user: UserSchema = ctx.app.state.user;
       const cart = user.cart;
       if (!cart.length) {
         throw {
-          code: Status.BadRequest,
           message: "Cart is empty",
         };
       }
@@ -20,19 +17,45 @@ export default {
 
       cart.forEach(async (el) => {
         const product = await products.findOne({ _id: el });
-        if (product == undefined) ctx.throw(Status.BadRequest, "Bad cart");
+        if (product == undefined) {
+          throw {
+            message: "Product not found",
+          };
+        }
         order.set(el, product.price);
       });
       await orders.insertOne({
         user: user._id,
         products: order,
       });
-      ctx.response.status = Status.OK;
+      await users.updateOne(user, {
+        $set: { cart: [] },
+      });
+      ctx.response.status = Status.Created;
       return ctx.response.body = {
         data: { msg: "Created" },
       };
     } catch (e) {
-      ctx.response.status = e.code;
+      ctx.response.status = Status.BadRequest;
+      return ctx.response.body = { error: { msg: e.message } };
+    }
+  },
+  index: async (ctx: Context) => {
+    try {
+      const { _id, username }: UserSchema = ctx.app.state.user;
+      return ctx.response.body = {
+        data: {
+          username: username,
+          orders: (await orders.find({ user: _id }).toArray()).map((value) => {
+            return {
+              date: value._id.getTimestamp(),
+              value: value.products,
+            };
+          }),
+        },
+      };
+    } catch (e) {
+      ctx.response.status = Status.BadRequest;
       return ctx.response.body = { error: { msg: e.message } };
     }
   },

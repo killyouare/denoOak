@@ -1,6 +1,7 @@
 export {
   Application,
   Context,
+  etag,
   Request,
   Response,
   Router,
