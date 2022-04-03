@@ -24,7 +24,7 @@ export default {
       });
       ctx.response.status = Status.Created;
       ctx.response.body = {
-        data: { msg: "Added" },
+        data: { msg: "Created" },
       };
     } catch (e) {
       ctx.response.body = {
