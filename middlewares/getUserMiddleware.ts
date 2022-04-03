@@ -1,7 +1,6 @@
 import { Context, ObjectId, Status, verify } from "../deps.ts";
 import { KEY } from "../config.ts";
 import { users } from "../models/Users.ts";
-import { etag } from "../deps.ts";
 const getUser = async (
   ctx: Context,
   next: () => Promise<unknown>,

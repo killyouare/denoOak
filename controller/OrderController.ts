@@ -1,29 +1,43 @@
-import { Bson, Context, Status } from "../deps.ts";
+import { Context, Status } from "../deps.ts";
 import { users, UserSchema } from "../models/Users.ts";
 import { products } from "../models/Products.ts";
-import { orders } from "../models/Order.ts";
+import { orderProducts, orders } from "../models/Order.ts";
 export default {
   create: async (ctx: Context) => {
     try {
       const user: UserSchema = ctx.app.state.user;
       const cart = user.cart;
+      const err: string[] = [];
       if (!cart.length) {
         throw {
           message: "Cart is empty",
         };
       }
+      const _products = (await products.find({
+        _id: { $in: user.cart },
+      }).toArray());
 
-      const order: Map<Bson.ObjectId, Bson.Decimal128> = new Map();
-
-      cart.forEach(async (el) => {
-        const product = await products.findOne({ _id: el });
-        if (product == undefined) {
-          throw {
-            message: "Product not found",
-          };
+      const order: orderProducts[] = [];
+      user.cart.forEach(async (value) => {
+        const product = _products.find((product) =>
+          product._id.toString() == value.toString()
+        );
+        if (product === undefined) {
+          await users.updateOne({ _id: user._id }, {
+            $pull: { cart: value },
+          });
+          err.push(`product ${value} not found`);
+          return;
         }
-        order.set(el, product.price);
+        order.push({ name: product.name, price: product.price });
       });
+
+      if (err.length) {
+        throw {
+          message: err,
+        };
+      }
+
       await orders.insertOne({
         user: user._id,
         products: order,
@@ -46,12 +60,14 @@ export default {
       return ctx.response.body = {
         data: {
           username: username,
-          orders: (await orders.find({ user: _id }).toArray()).map((value) => {
-            return {
-              date: value._id.getTimestamp(),
-              value: value.products,
-            };
-          }),
+          orders: (await orders.find({ user: _id }).toArray()).map(
+            (value) => {
+              return {
+                date: value._id.getTimestamp(),
+                product: value.products,
+              };
+            },
+          ),
         },
       };
     } catch (e) {

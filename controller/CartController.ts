@@ -1,5 +1,5 @@
 import { users, UserSchema } from "../models/Users.ts";
-import { products, ProductSchema } from "../models/Products.ts";
+import { products } from "../models/Products.ts";
 import { Context, ObjectId, Status } from "../deps.ts";
 
 export default {
@@ -8,16 +8,18 @@ export default {
       const request = await ctx.request.body();
       const { product } = await request.value;
       const user = ctx.app.state.user;
-      const productId = new ObjectId(product);
-      if (!await products.findOne({ _id: productId })) {
+      const productItem = await products.findOne({
+        _id: new ObjectId(product),
+      });
+      if (productItem == undefined) {
         return ctx.response.body = {
           error: { msg: "Product not found" },
         };
       }
 
-      await users.updateOne(user, {
+      await users.updateOne({ _id: user._id }, {
         $push: {
-          cart: product,
+          cart: { $each: [productItem._id] },
         },
       });
       ctx.response.status = Status.Created;
@@ -32,39 +34,21 @@ export default {
       };
     }
   },
-  index: (ctx: Context) => {
+  index: async (ctx: Context) => {
     try {
       const user: UserSchema = ctx.app.state.user;
-      const err: string[] = [];
-      const data = {
-        username: user.username,
-        cart: user.cart.map(async (value) => {
-          const product: ProductSchema | undefined = await products.findOne({
-            _id: value,
-          });
-          if (product == undefined) {
-            await users.updateOne(user, {
-              $pull: {
-                cart: value,
-              },
-            });
-            err.push(`Product ${value} not exists`);
-            return;
-          }
-          return {
-            name: product.name,
-            description: product.description,
-            price: product.price,
-          };
-        }),
-      };
-      if (err.length) {
-        throw {
-          msg: err,
-        };
-      }
+      const _products = (await products.find({
+        _id: { $in: user.cart },
+      }).toArray());
       return ctx.response.body = {
-        data: data,
+        data: {
+          username: user.username,
+          cart: user.cart.map((product) => {
+            return _products.find((productItem) => {
+              return productItem._id.toString() == product.toString();
+            });
+          }),
+        },
       };
     } catch (e) {
       ctx.response.status = Status.UnprocessableEntity;
@@ -77,35 +61,35 @@ export default {
   },
   del: async (ctx: any) => {
     try {
-      const id = ctx.params.id;
-      const user = ctx.app.state.user;
+      const id: string = ctx.params.id;
+      const user: UserSchema = ctx.app.state.user;
+      const cartStr = user.cart.map((product) => product.toString());
 
-      const cart = user.cart;
-
-      if (!cart.length) {
+      if (!user.cart.length) {
         throw {
           code: Status.BadRequest,
           message: "Cart is empty",
         };
       }
 
-      const index = cart.indexOf(id);
-
+      const index = cartStr.indexOf(id);
       if (index == -1) {
         throw {
           code: Status.BadRequest,
           message: "No specified product",
         };
       }
+      user.cart.splice(index, 1);
+      await users
+        .updateOne(
+          { _id: user._id },
+          {
+            $set: {
+              cart: user.cart,
+            },
+          },
+        );
 
-      cart.splice(index, 1);
-
-      await users.updateOne(
-        user,
-        {
-          $set: { cart },
-        },
-      );
       return ctx.response.body = {
         data: { msg: "Item removed" },
       };
