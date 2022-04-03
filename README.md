@@ -11,7 +11,10 @@ Mini shop
 ```bash
   git clone https://github.com/killyouare/denooak
   cd denooak/
+  cp .env.example .env
 ```
+change .env
+
 install [deno](https://deno.land/) 
 ```bash
   deno --allow-net --allow-read app.ts
